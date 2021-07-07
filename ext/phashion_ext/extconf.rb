@@ -9,7 +9,7 @@ $libraries = " -L#{HERE}/lib -L/usr/local/lib"
 $LIBPATH = ["#{HERE}/lib"]
 $CFLAGS = "#{$includes} #{$libraries} #{$CFLAGS}"
 $LDFLAGS = "#{$libraries} #{$LDFLAGS}"
-$CXXFLAGS = ' -pthread'  
+$CXXFLAGS = ' -pthread'
 
 Dir.chdir(HERE) do
   if File.exist?("lib")
@@ -20,7 +20,14 @@ Dir.chdir(HERE) do
     raise "'#{cmd}' failed" unless system(cmd)
 
     Dir.chdir(BUNDLE_PATH) do
-      puts(cmd = "env CXXFLAGS='#{$CXXFLAGS}' CFLAGS='#{$CFLAGS}' LDFLAGS='#{$LDFLAGS}' ./configure --prefix=#{HERE} --disable-audio-hash --disable-video-hash --disable-shared --with-pic 2>&1")
+      additional_configure_opts = case RUBY_PLATFORM
+      when /aarch64/
+        '--build=arm-unknown-linux-gnu --host=arm-unknown-linux-gnu --target=arm-unknown-linux-gnu'
+      else
+        nil
+      end
+
+      puts(cmd = "env CXXFLAGS='#{$CXXFLAGS}' CFLAGS='#{$CFLAGS}' LDFLAGS='#{$LDFLAGS}' ./configure --prefix=#{HERE} --disable-audio-hash --disable-video-hash --disable-shared --with-pic #{additional_configure_opts} 2>&1")
       raise "'#{cmd}' failed" unless system(cmd)
 
       puts(cmd = "make || true 2>&1")
